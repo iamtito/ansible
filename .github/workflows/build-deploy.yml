@@ -1,0 +1,32 @@
+name: Build & Upload Ansible container
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test run the deployment without actually deploying it. Type: test"
+        required: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: azure/docker-login@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Docker Build & Push
+        run: |
+          set -exv
+          docker build -t tbola45/ansible:latest .
+
+          if [ ${{github.event.inputs.test}} ]; then 
+            echo "Nothing to push, this is just a test"
+          else
+            docker push tbola45/ansible:latest
+          fi
